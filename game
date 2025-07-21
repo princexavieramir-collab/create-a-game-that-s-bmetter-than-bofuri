@@ -1,0 +1,93 @@
+
+import pygame
+import math
+from enum import Enum
+
+class Skill:
+    def __init__(self, name, damage, defense, cost):
+        self.name = name
+        self.damage = damage
+        self.defense = defense
+        self.cost_mp = cost
+
+class Character:
+    def __init__(self):
+        self.level = 1
+        self.hp = 100
+        self.mp = 50
+        self.defense = 10
+        self.position = [400, 300]  # Starting position
+        self.speed = 5
+        self.skills = []
+        
+    def add_skill(self, skill):
+        self.skills.append(skill)
+    
+    def move(self, dx, dy):
+        # Normalize diagonal movement
+        if dx != 0 and dy != 0:
+            dx *= 0.707  # 1/√2
+            dy *= 0.707
+        self.position[0] += dx * self.speed
+        self.position[1] += dy * self.speed
+    
+    def use_skill(self, skill_index):
+        if skill_index < len(self.skills):
+            skill = self.skills[skill_index]
+            if self.mp >= skill.cost_mp:
+                self.mp -= skill.cost_mp
+                return True
+        return False
+
+def main():
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    pygame.display.set_caption("Bofuri-inspired Game")
+    
+    # Create player character
+    player = Character()
+    
+    # Add some basic skills
+    player.add_skill(Skill("Shield Bash", 20, 5, 10))
+    player.add_skill(Skill("Defense Up", 0, 20, 15))
+    player.add_skill(Skill("Counter Shield", 30, 15, 25))
+    
+    running = True
+    clock = pygame.time.Clock()
+    
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            
+            # Skill usage with number keys
+            if event.type == pygame.KEYDOWN:
+                if event.key in [pygame.K_1, pygame.K_2, pygame.K_3]:
+                    skill_index = event.key - pygame.K_1
+                    player.use_skill(skill_index)
+        
+        # Movement controls
+        keys = pygame.key.get_pressed()
+        dx = keys[pygame.K_d] - keys[pygame.K_a]
+        dy = keys[pygame.K_s] - keys[pygame.K_w]
+        player.move(dx, dy)
+        
+        # Drawing
+        screen.fill((255, 255, 255))
+        pygame.draw.circle(screen, (0, 0, 255), 
+                         [int(player.position[0]), int(player.position[1])], 20)
+        
+        # Draw UI elements
+        font = pygame.font.Font(None, 36)
+        hp_text = font.render(f"HP: {player.hp}", True, (0, 0, 0))
+        mp_text = font.render(f"MP: {player.mp}", True, (0, 0, 0))
+        screen.blit(hp_text, (10, 10))
+        screen.blit(mp_text, (10, 50))
+        
+        pygame.display.flip()
+        clock.tick(60)
+    
+    pygame.quit()
+
+if __name__ == "__main__":
+    main()
